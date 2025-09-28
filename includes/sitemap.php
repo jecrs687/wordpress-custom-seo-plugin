@@ -29,6 +29,12 @@ class Custom_SEO_Sitemap {
     public static function init_rewrite_rules() {
         add_rewrite_rule( '^sitemap\.xml$', 'index.php?custom_sitemap=main', 'top' );
         add_rewrite_rule( '^sitemap-([^/]+)\.xml$', 'index.php?custom_sitemap=$matches[1]', 'top' );
+        
+        // Check if we need to flush rewrite rules
+        $rules = get_option( 'rewrite_rules' );
+        if ( ! isset( $rules['^sitemap\.xml$'] ) ) {
+            flush_rewrite_rules();
+        }
     }
     
     /**

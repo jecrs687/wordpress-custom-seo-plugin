@@ -1,0 +1,37 @@
+# Build artifacts
+build/custom-seo/
+build/*.zip
+build/README.md
+
+# Keep the build directory structure
+!build/
+!build/.gitkeep
+
+# Development files
+*-backup.php
+*.bak
+*.tmp
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# WordPress specific
+wp-config.php
+.htaccess
+
+# Node modules (if using any build tools)
+node_modules/
+package-lock.json
+
+# Composer
+vendor/
+composer.lock

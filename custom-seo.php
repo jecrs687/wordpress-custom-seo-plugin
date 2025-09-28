@@ -1,11 +1,19 @@
 <?php
 /**
  * Plugin Name: Custom SEO
+ * Plugin URI: https://github.com/jecrs687/wordpress-custom-seo-plugin
  * Description: A comprehensive SEO plugin with REST API fields, sitemaps, breadcrumbs, and advanced social sharing.
  * Version: 1.0.0
- * Author: Your Name
+ * Author: jecrs687
+ * Author URI: https://github.com/jecrs687
  * Text Domain: custom-seo
  * Domain Path: /languages
+ * Requires at least: 5.0
+ * Tested up to: 6.5
+ * Requires PHP: 7.4
+ * Network: false
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -36,8 +44,16 @@ class Custom_SEO {
         // Register REST API hooks
         add_action( 'rest_api_init', [ __CLASS__, 'register_rest_hooks' ] );
         
+        // Add plugin icon and admin styles
+        add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_admin_styles' ] );
+        add_filter( 'plugin_row_meta', [ __CLASS__, 'add_plugin_row_meta' ], 10, 2 );
+        add_filter( 'plugin_action_links_' . plugin_basename( CUSTOM_SEO_PLUGIN_FILE ), [ __CLASS__, 'add_plugin_action_links' ] );
+        
         // Load includes
         self::includes();
+        
+        // Add admin notice to verify plugin is working
+        add_action( 'admin_notices', [ __CLASS__, 'show_plugin_loaded_notice' ] );
         
         // Activation/Deactivation hooks
         register_activation_hook( CUSTOM_SEO_PLUGIN_FILE, [ __CLASS__, 'activate' ] );
@@ -246,6 +262,86 @@ class Custom_SEO {
                 $post_id
             )
         ];
+    }
+    
+    /**
+     * Enqueue admin styles for plugin icon
+     */
+    public static function enqueue_admin_styles( $hook ) {
+        // Only load on plugins page
+        if ( 'plugins.php' === $hook ) {
+            $css = '
+                .wp-list-table.plugins #the-list tr[data-plugin="' . plugin_basename( CUSTOM_SEO_PLUGIN_FILE ) . '"] .plugin-title strong:before {
+                    content: "";
+                    background-image: url("' . CUSTOM_SEO_PLUGIN_URL . 'assets/icon.svg"), url("' . CUSTOM_SEO_PLUGIN_URL . 'assets/icon.png");
+                    background-size: 20px 20px;
+                    background-repeat: no-repeat;
+                    display: inline-block;
+                    width: 20px;
+                    height: 20px;
+                    margin-right: 8px;
+                    vertical-align: middle;
+                }
+                .wp-list-table.plugins #the-list tr[data-plugin="' . plugin_basename( CUSTOM_SEO_PLUGIN_FILE ) . '"] .plugin-icon {
+                    background-image: url("' . CUSTOM_SEO_PLUGIN_URL . 'assets/icon.svg"), url("' . CUSTOM_SEO_PLUGIN_URL . 'assets/icon-128x128.png");
+                    background-size: cover;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    width: 64px;
+                    height: 64px;
+                }
+                @media only screen and (min-width: 1200px) {
+                    .wp-list-table.plugins #the-list tr[data-plugin="' . plugin_basename( CUSTOM_SEO_PLUGIN_FILE ) . '"] .plugin-icon {
+                        background-image: url("' . CUSTOM_SEO_PLUGIN_URL . 'assets/icon.svg"), url("' . CUSTOM_SEO_PLUGIN_URL . 'assets/icon-256x256.png");
+                    }
+                }
+                /* Custom SEO Plugin branding */
+                .wp-list-table.plugins #the-list tr[data-plugin="' . plugin_basename( CUSTOM_SEO_PLUGIN_FILE ) . '"] {
+                    background: linear-gradient(90deg, rgba(0,115,170,0.05) 0%, transparent 100%);
+                }
+                .wp-list-table.plugins #the-list tr[data-plugin="' . plugin_basename( CUSTOM_SEO_PLUGIN_FILE ) . '"] .plugin-title strong {
+                    color: #0073aa;
+                }
+            ';
+            
+            wp_add_inline_style( 'wp-admin', $css );
+        }
+    }
+    
+    /**
+     * Add plugin row meta with icon support
+     */
+    public static function add_plugin_row_meta( $links, $file ) {
+        if ( $file === plugin_basename( CUSTOM_SEO_PLUGIN_FILE ) ) {
+            $new_links = [
+                'docs' => '<a href="https://github.com/jecrs687/wordpress-custom-seo-plugin#readme" target="_blank">📚 ' . __( 'Documentation', 'custom-seo' ) . '</a>',
+                'support' => '<a href="https://github.com/jecrs687/wordpress-custom-seo-plugin/issues" target="_blank">🐛 ' . __( 'Support', 'custom-seo' ) . '</a>',
+                'github' => '<a href="https://github.com/jecrs687/wordpress-custom-seo-plugin" target="_blank">⭐ ' . __( 'GitHub', 'custom-seo' ) . '</a>'
+            ];
+            return array_merge( $links, $new_links );
+        }
+        return $links;
+    }
+    
+    /**
+     * Add plugin action links
+     */
+    public static function add_plugin_action_links( $links ) {
+        $settings_link = '<a href="' . admin_url( 'admin.php?page=custom-seo-main' ) . '">' . __( 'Settings', 'custom-seo' ) . '</a>';
+        array_unshift( $links, $settings_link );
+        return $links;
+    }
+    
+    /**
+     * Show plugin loaded notice (temporary for debugging)
+     */
+    public static function show_plugin_loaded_notice() {
+        $screen = get_current_screen();
+        if ( $screen->id === 'plugins' ) {
+            echo '<div class="notice notice-success is-dismissible">';
+            echo '<p><strong>Custom SEO Plugin:</strong> Plugin loaded successfully! Settings available at <a href="' . admin_url( 'admin.php?page=custom-seo-main' ) . '">Custom SEO</a> in the admin menu.</p>';
+            echo '</div>';
+        }
     }
     
     /**

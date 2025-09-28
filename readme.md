@@ -231,7 +231,13 @@ custom-seo/
 │   ├── 📄 breadcrumbs.php        # Breadcrumb system
 │   ├── 📄 schema.php             # JSON-LD markup
 │   └── 📄 analytics.php          # Analytics integration
-├── 📁 assets/                     # Static files
+├── 📁 assets/                     # Plugin assets
+│   ├── 📄 icon.png               # Plugin icon (PNG)
+│   ├── 📄 icon.svg               # Plugin icon (SVG)
+│   ├── 📄 icon-128x128.png       # Plugin icon (128x128)
+│   ├── 📄 icon-256x256.png       # Plugin icon (256x256)
+│   ├── 📄 banner-772x250.png     # Plugin banner (standard)
+│   └── 📄 banner-1544x500.png    # Plugin banner (high-DPI)
 ├── 📁 languages/                  # Translation files
 └── 📄 README.md                   # This file
 ```
