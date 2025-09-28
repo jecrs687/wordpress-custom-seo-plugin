@@ -103,6 +103,50 @@ class Custom_SEO_Meta_Boxes {
                         </td>
                     </tr>
                     <tr>
+                        <th><label for="custom_language"><?php _e( 'Content Language', 'custom-seo' ); ?></label></th>
+                        <td>
+                            <select id="custom_language" name="custom_language" class="regular-text">
+                                <option value=""><?php _e( 'Use site default', 'custom-seo' ); ?></option>
+                                <?php
+                                $languages = [
+                                    'en' => 'English',
+                                    'es' => 'Español',
+                                    'fr' => 'Français',
+                                    'de' => 'Deutsch',
+                                    'it' => 'Italiano',
+                                    'pt' => 'Português',
+                                    'ru' => 'Русский',
+                                    'ja' => '日本語',
+                                    'ko' => '한국어',
+                                    'zh' => '中文',
+                                    'ar' => 'العربية',
+                                    'hi' => 'हिन्दी',
+                                    'nl' => 'Nederlands',
+                                    'sv' => 'Svenska',
+                                    'da' => 'Dansk',
+                                    'no' => 'Norsk',
+                                    'fi' => 'Suomi',
+                                    'pl' => 'Polski',
+                                    'tr' => 'Türkçe',
+                                    'he' => 'עברית',
+                                ];
+                                
+                                $current_language = $values['custom_language'];
+                                foreach ( $languages as $code => $name ) {
+                                    printf(
+                                        '<option value="%s"%s>%s (%s)</option>',
+                                        esc_attr( $code ),
+                                        selected( $current_language, $code, false ),
+                                        esc_html( $name ),
+                                        esc_html( $code )
+                                    );
+                                }
+                                ?>
+                            </select>
+                            <p class="description"><?php _e( 'Specify the language of this content for better SEO and accessibility.', 'custom-seo' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th><label for="custom_meta_keywords"><?php _e( 'Meta Keywords', 'custom-seo' ); ?></label></th>
                         <td>
                             <input type="text" id="custom_meta_keywords" name="custom_meta_keywords" value="<?php echo esc_attr( $values['custom_meta_keywords'] ); ?>" class="large-text" />

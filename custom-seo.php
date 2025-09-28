@@ -97,6 +97,7 @@ class Custom_SEO {
             'custom_focus_keyword'    => 'string',
             'custom_canonical_url'    => 'string',
             'custom_robots'           => 'string',
+            'custom_language'         => 'string',
             
             // Open Graph
             'custom_og_title'         => 'string',

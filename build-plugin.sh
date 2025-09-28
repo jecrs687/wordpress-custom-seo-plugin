@@ -9,7 +9,7 @@ set -e  # Exit on any error
 
 # Configuration
 PLUGIN_NAME="custom-seo"
-PLUGIN_VERSION="1.0.0"
+PLUGIN_VERSION="1.0.1"
 BUILD_DIR="build"
 PLUGIN_DIR="$BUILD_DIR/$PLUGIN_NAME"
 ZIP_NAME="${PLUGIN_NAME}-${PLUGIN_VERSION}.zip"

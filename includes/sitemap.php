@@ -107,7 +107,7 @@ class Custom_SEO_Sitemap {
      */
     private static function generate_sitemap( $type ) {
         echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' . "\n";
+        echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">' . "\n";
         
         // Check if it's a post type
         if ( post_type_exists( $type ) ) {
@@ -145,6 +145,15 @@ class Custom_SEO_Sitemap {
             echo '<lastmod>' . $modified . '</lastmod>' . "\n";
             echo '<changefreq>weekly</changefreq>' . "\n";
             echo '<priority>' . self::get_priority( $post ) . '</priority>' . "\n";
+            
+            // Add language information if available
+            $language = get_post_meta( $post->ID, 'custom_language', true );
+            if ( ! $language ) {
+                $language = get_option( 'custom_seo_default_language', '' );
+            }
+            if ( $language ) {
+                echo '<xhtml:link rel="alternate" hreflang="' . esc_attr( $language ) . '" href="' . esc_url( $permalink ) . '" />' . "\n";
+            }
             
             // Add image if available
             self::add_sitemap_image( $post );

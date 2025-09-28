@@ -59,19 +59,16 @@ class Custom_SEO_Settings_Page {
      */
     public static function settings_init() {
         $settings = [
-            'custom_seo_google_verification',
-            'custom_seo_bing_verification',
-            'custom_seo_pinterest_verification',
-            'custom_seo_google_analytics',
-            'custom_seo_gtag_id',
+            'custom_seo_google_analytics_id',
+            'custom_seo_google_site_verification',
+            'custom_seo_bing_site_verification',
+            'custom_seo_twitter_username',
             'custom_seo_facebook_app_id',
             'custom_seo_default_og_image',
-            'custom_seo_twitter_username',
             'custom_seo_organization_name',
-            'custom_seo_organization_logo'
-        ];
-        
-        foreach ( $settings as $setting ) {
+            'custom_seo_organization_logo',
+            'custom_seo_default_language'
+        ];        foreach ( $settings as $setting ) {
             register_setting( 'custom_seo_settings', $setting );
         }
     }
@@ -195,6 +192,51 @@ class Custom_SEO_Settings_Page {
                                 <?php endif; ?>
                             </div>
                             <p class="description"><?php _e( 'Your organization logo for schema markup', 'custom-seo' ); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e( 'Default Language', 'custom-seo' ); ?></th>
+                        <td>
+                            <select name="custom_seo_default_language" id="custom_seo_default_language">
+                                <option value=""><?php _e( 'WordPress default', 'custom-seo' ); ?></option>
+                                <?php
+                                $languages = [
+                                    'en' => 'English',
+                                    'es' => 'Español',
+                                    'fr' => 'Français',
+                                    'de' => 'Deutsch',
+                                    'it' => 'Italiano',
+                                    'pt' => 'Português',
+                                    'ru' => 'Русский',
+                                    'ja' => '日本語',
+                                    'ko' => '한국어',
+                                    'zh' => '中文',
+                                    'ar' => 'العربية',
+                                    'hi' => 'हिन्दी',
+                                    'nl' => 'Nederlands',
+                                    'sv' => 'Svenska',
+                                    'da' => 'Dansk',
+                                    'no' => 'Norsk',
+                                    'fi' => 'Suomi',
+                                    'pl' => 'Polski',
+                                    'tr' => 'Türkçe',
+                                    'he' => 'עברית',
+                                ];
+                                
+                                $current_default = get_option( 'custom_seo_default_language', '' );
+                                foreach ( $languages as $code => $name ) {
+                                    printf(
+                                        '<option value="%s"%s>%s (%s)</option>',
+                                        esc_attr( $code ),
+                                        selected( $current_default, $code, false ),
+                                        esc_html( $name ),
+                                        esc_html( $code )
+                                    );
+                                }
+                                ?>
+                            </select>
+                            <p class="description"><?php _e( 'Default language for new content. Individual posts can override this setting.', 'custom-seo' ); ?></p>
                         </td>
                     </tr>
                 </table>

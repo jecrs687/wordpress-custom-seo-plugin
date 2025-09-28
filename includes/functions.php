@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function custom_seo_get_meta_fields() {
     return [
         'custom_seo_title', 'custom_seo_description', 'custom_focus_keyword', 'custom_canonical_url',
-        'custom_robots', 'custom_og_title', 'custom_og_description', 'custom_og_image_id', 'custom_og_type',
+        'custom_robots', 'custom_language', 'custom_og_title', 'custom_og_description', 'custom_og_image_id', 'custom_og_type',
         'custom_og_locale', 'custom_twitter_title', 'custom_twitter_description', 'custom_twitter_image_id',
         'custom_twitter_card', 'custom_twitter_site', 'custom_twitter_creator', 'custom_schema_type',
         'custom_schema_data', 'custom_meta_keywords', 'custom_redirect_url', 'custom_redirect_type',

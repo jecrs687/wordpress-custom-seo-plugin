@@ -28,6 +28,7 @@
 - ✅ **Focus Keywords** - Track primary keywords for each page
 - ✅ **Canonical URLs** - Prevent duplicate content issues
 - ✅ **Robots Directives** - Control search engine indexing (noindex, nofollow, etc.)
+- ✅ **Language Support** - Set content language with HTML lang attribute and meta tags
 - ✅ **301/302 Redirects** - Built-in redirect functionality
 
 ### 📱 **Social Media**
@@ -177,6 +178,37 @@ gtag('event', 'page_view', {
 });
 ```
 
+### 🌐 **Language Support**
+
+#### Setting Default Language
+```php
+// In WordPress Admin → Custom SEO → Settings
+// Set "Default Language" to your site's primary language
+// This applies to all content unless overridden per-post
+```
+
+#### Per-Post Language Override
+```php
+// In post editor → Custom SEO → General tab
+// Select specific language for multilingual content
+// Generates proper HTML lang attributes and meta tags
+```
+
+#### Generated Output
+```html
+<!-- HTML tag with language attribute -->
+<html lang="es">
+
+<!-- Meta tag for content language -->
+<meta http-equiv="content-language" content="es">
+
+<!-- Open Graph locale (auto-converted) -->
+<meta property="og:locale" content="es_ES">
+
+<!-- Sitemap hreflang annotations -->
+<xhtml:link rel="alternate" hreflang="es" href="https://yoursite.com/post/" />
+```
+
 ### 🗺️ **Sitemap Usage**
 
 #### Main Sitemap Index
@@ -297,6 +329,7 @@ curl -X GET "${WP_SITE}/wp-json/wp/v2/posts/123" \
     "custom_seo_description": "Learn advanced WordPress SEO techniques that will boost your rankings in 2025.",
     "custom_focus_keyword": "wordpress seo",
     "custom_canonical_url": "https://yoursite.com/wordpress-seo-guide/",
+    "custom_language": "en",
     "custom_og_title": "Ultimate WordPress SEO Guide",
     "custom_og_description": "Master WordPress SEO with our comprehensive guide",
     "custom_og_image_id": 456,
@@ -878,6 +911,7 @@ if __name__ == "__main__":
 | `custom_seo_description` | string | Meta description | "Learn WordPress SEO techniques..." |
 | `custom_focus_keyword` | string | Primary keyword | "wordpress seo" |
 | `custom_canonical_url` | string | Canonical URL | "https://site.com/page/" |
+| `custom_language` | string | Content language | "en", "es", "fr", etc. |
 | `custom_og_title` | string | Open Graph title | "Amazing WordPress Guide" |
 | `custom_og_description` | string | Open Graph description | "Complete guide to WordPress" |
 | `custom_og_image_id` | integer | Open Graph image ID | 456 |

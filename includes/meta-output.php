@@ -19,6 +19,7 @@ class Custom_SEO_Meta_Output {
      */
     public static function init() {
         add_action( 'wp_head', [ __CLASS__, 'output_meta' ], 5 );
+        add_filter( 'language_attributes', [ __CLASS__, 'filter_language_attributes' ] );
     }
     
     /**
@@ -75,6 +76,16 @@ class Custom_SEO_Meta_Output {
             echo '<meta name="keywords" content="' . esc_attr( $keywords ) . "\">\n";
         }
         echo '<meta name="robots" content="' . esc_attr( implode( ',', $robots ) ) . "\">\n";
+        
+        // Language meta tag
+        $language = get_post_meta( $post->ID, 'custom_language', true );
+        if ( ! $language ) {
+            $language = get_option( 'custom_seo_default_language', '' );
+        }
+        if ( $language ) {
+            echo '<meta http-equiv="content-language" content="' . esc_attr( $language ) . "\">\n";
+        }
+        
         echo '<link rel="canonical" href="' . esc_url( $canonical ) . "\">\n";
         
         // Open Graph
@@ -149,7 +160,20 @@ class Custom_SEO_Meta_Output {
         $og_title = get_post_meta( $post->ID, 'custom_og_title', true ) ?: $title;
         $og_description = get_post_meta( $post->ID, 'custom_og_description', true ) ?: $description;
         $og_type = get_post_meta( $post->ID, 'custom_og_type', true ) ?: 'article';
-        $og_locale = get_post_meta( $post->ID, 'custom_og_locale', true ) ?: get_locale();
+        $og_locale = get_post_meta( $post->ID, 'custom_og_locale', true );
+        if ( ! $og_locale ) {
+            // Use the language field for locale if available
+            $language = get_post_meta( $post->ID, 'custom_language', true );
+            if ( ! $language ) {
+                $language = get_option( 'custom_seo_default_language', '' );
+            }
+            if ( $language ) {
+                // Convert language code to locale format (e.g., 'en' to 'en_US')
+                $og_locale = self::convert_language_to_locale( $language );
+            } else {
+                $og_locale = get_locale();
+            }
+        }
         $og_image_id = get_post_meta( $post->ID, 'custom_og_image_id', true );
         $og_image_url = $og_image_id ? wp_get_attachment_url( $og_image_id ) : '';
         
@@ -250,6 +274,62 @@ class Custom_SEO_Meta_Output {
         // Analytics and organization schema
         Custom_SEO_Analytics::output_analytics();
         Custom_SEO_Schema::output_organization_schema();
+    }
+    
+    /**
+     * Filter language attributes for HTML tag
+     */
+    public static function filter_language_attributes( $output ) {
+        global $post;
+        
+        // Only modify for singular posts/pages
+        if ( is_singular() && $post ) {
+            $language = get_post_meta( $post->ID, 'custom_language', true );
+            if ( ! $language ) {
+                $language = get_option( 'custom_seo_default_language', '' );
+            }
+            
+            if ( $language ) {
+                // Replace or add the lang attribute
+                if ( strpos( $output, 'lang=' ) !== false ) {
+                    $output = preg_replace( '/lang="[^"]*"/', 'lang="' . esc_attr( $language ) . '"', $output );
+                } else {
+                    $output .= ' lang="' . esc_attr( $language ) . '"';
+                }
+            }
+        }
+        
+        return $output;
+    }
+    
+    /**
+     * Convert language code to locale format
+     */
+    private static function convert_language_to_locale( $language ) {
+        $locale_map = [
+            'en' => 'en_US',
+            'es' => 'es_ES',
+            'fr' => 'fr_FR',
+            'de' => 'de_DE',
+            'it' => 'it_IT',
+            'pt' => 'pt_PT',
+            'ru' => 'ru_RU',
+            'ja' => 'ja_JP',
+            'ko' => 'ko_KR',
+            'zh' => 'zh_CN',
+            'ar' => 'ar_AR',
+            'hi' => 'hi_IN',
+            'nl' => 'nl_NL',
+            'sv' => 'sv_SE',
+            'da' => 'da_DK',
+            'no' => 'nb_NO',
+            'fi' => 'fi_FI',
+            'pl' => 'pl_PL',
+            'tr' => 'tr_TR',
+            'he' => 'he_IL',
+        ];
+        
+        return isset( $locale_map[ $language ] ) ? $locale_map[ $language ] : $language . '_' . strtoupper( $language );
     }
 }
 
