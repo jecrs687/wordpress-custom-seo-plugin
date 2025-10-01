@@ -159,6 +159,10 @@ class Custom_SEO {
         // Hook into post meta updates to process categories and tags
         add_action( 'updated_post_meta', [ __CLASS__, 'process_rest_categories_tags' ], 10, 4 );
         
+        // Hook to process categories and tags when posts are created/updated via REST API
+        add_action( 'rest_insert_post', [ __CLASS__, 'process_rest_post_terms' ], 10, 3 );
+        add_action( 'rest_after_insert_post', [ __CLASS__, 'process_rest_post_terms' ], 10, 3 );
+        
         // Register REST endpoint for category/tag processing
         register_rest_route( 'custom-seo/v1', '/process-terms/(?P<id>\d+)', [
             'methods' => 'POST',
@@ -205,6 +209,12 @@ class Custom_SEO {
             return;
         }
         
+        // Avoid duplicate processing - check if we're in a REST request
+        if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+            // Skip this processing if we're in a REST request, as it will be handled by process_rest_post_terms
+            return;
+        }
+        
         // Get all the SEO meta for processing
         $categories = get_post_meta( $post_id, 'custom_seo_categories', true );
         $tags = get_post_meta( $post_id, 'custom_seo_tags', true );
@@ -212,8 +222,8 @@ class Custom_SEO {
         $replace_tags = get_post_meta( $post_id, 'custom_seo_replace_tags', true );
         $auto_create = get_post_meta( $post_id, 'custom_seo_auto_create_terms', true );
         
-        // Process if we have categories or tags to process
-        if ( ! empty( $categories ) || ! empty( $tags ) ) {
+        // Process if we have categories or tags to process and auto_create is enabled
+        if ( ( ! empty( $categories ) || ! empty( $tags ) ) && $auto_create ) {
             custom_seo_process_categories_and_tags( 
                 $post_id, 
                 $categories, 
@@ -223,6 +233,43 @@ class Custom_SEO {
                 (bool) $auto_create 
             );
         }
+    }
+    
+    /**
+     * Process categories and tags when posts are created/updated via REST API
+     */
+    public static function process_rest_post_terms( $post, $request, $creating ) {
+        // Only process if we have meta data in the request
+        if ( ! isset( $request['meta'] ) || ! is_array( $request['meta'] ) ) {
+            return;
+        }
+        
+        $meta = $request['meta'];
+        
+        // Check if we have category/tag fields to process
+        $has_categories = isset( $meta['custom_seo_categories'] ) && ! empty( $meta['custom_seo_categories'] );
+        $has_tags = isset( $meta['custom_seo_tags'] ) && ! empty( $meta['custom_seo_tags'] );
+        
+        if ( ! $has_categories && ! $has_tags ) {
+            return;
+        }
+        
+        // Get the processing options
+        $categories = $has_categories ? $meta['custom_seo_categories'] : '';
+        $tags = $has_tags ? $meta['custom_seo_tags'] : '';
+        $replace_categories = isset( $meta['custom_seo_replace_categories'] ) ? (bool) $meta['custom_seo_replace_categories'] : false;
+        $replace_tags = isset( $meta['custom_seo_replace_tags'] ) ? (bool) $meta['custom_seo_replace_tags'] : false;
+        $auto_create = isset( $meta['custom_seo_auto_create_terms'] ) ? (bool) $meta['custom_seo_auto_create_terms'] : true;
+        
+        // Process categories and tags immediately
+        custom_seo_process_categories_and_tags( 
+            $post->ID, 
+            $categories, 
+            $tags, 
+            $replace_categories, 
+            $replace_tags, 
+            $auto_create 
+        );
     }
     
     /**

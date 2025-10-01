@@ -163,23 +163,22 @@ function custom_seo_create_category( $category_name, $parent_id = 0 ) {
     }
     
     // Check if category already exists
-    $existing_category = get_category_by_slug( sanitize_title( $category_name ) );
+    $existing_category = get_term_by( 'name', $category_name, 'category' );
     if ( $existing_category ) {
         return $existing_category->term_id;
     }
     
-    // Create new category
-    $category_data = wp_insert_category( [
-        'cat_name' => $category_name,
-        'category_parent' => $parent_id,
-        'category_description' => sprintf( __( 'Auto-created category: %s', 'custom-seo' ), $category_name )
+    // Create new category using wp_insert_term (modern approach)
+    $category_data = wp_insert_term( $category_name, 'category', [
+        'parent' => $parent_id,
+        'description' => sprintf( __( 'Auto-created category: %s', 'custom-seo' ), $category_name )
     ] );
     
     if ( is_wp_error( $category_data ) ) {
         return $category_data;
     }
     
-    return $category_data;
+    return $category_data['term_id'];
 }
 
 /**
@@ -230,6 +229,17 @@ function custom_seo_process_categories_and_tags( $post_id, $categories_string = 
         'tags' => [ 'success' => [], 'errors' => [] ]
     ];
     
+    // Debug logging
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        error_log( sprintf( 
+            'Custom SEO: Processing terms for post %d - Categories: "%s", Tags: "%s", Auto-create: %s', 
+            $post_id, 
+            $categories_string, 
+            $tags_string, 
+            $auto_create ? 'true' : 'false' 
+        ) );
+    }
+    
     // Process categories
     if ( ! empty( $categories_string ) ) {
         $category_names = array_map( 'trim', explode( ',', $categories_string ) );
@@ -241,18 +251,25 @@ function custom_seo_process_categories_and_tags( $post_id, $categories_string = 
             if ( $auto_create ) {
                 $category_id = custom_seo_create_category( $category_name );
                 if ( is_wp_error( $category_id ) ) {
-                    $results['categories']['errors'][] = sprintf( 
+                    $error_msg = sprintf( 
                         __( 'Failed to create category "%s": %s', 'custom-seo' ), 
                         $category_name, 
                         $category_id->get_error_message() 
                     );
+                    $results['categories']['errors'][] = $error_msg;
+                    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                        error_log( 'Custom SEO: ' . $error_msg );
+                    }
                 } else {
                     $category_ids[] = $category_id;
                     $results['categories']['success'][] = $category_name;
+                    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                        error_log( sprintf( 'Custom SEO: Created category "%s" with ID %d', $category_name, $category_id ) );
+                    }
                 }
             } else {
                 // Only assign existing categories
-                $existing_category = get_category_by_slug( sanitize_title( $category_name ) );
+                $existing_category = get_term_by( 'name', $category_name, 'category' );
                 if ( $existing_category ) {
                     $category_ids[] = $existing_category->term_id;
                     $results['categories']['success'][] = $category_name;

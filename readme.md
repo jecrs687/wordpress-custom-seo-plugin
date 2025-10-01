@@ -209,6 +209,177 @@ gtag('event', 'page_view', {
 <xhtml:link rel="alternate" hreflang="es" href="https://yoursite.com/post/" />
 ```
 
+### 🏷️ **Categories & Tags Auto-Creation**
+
+#### How Auto-Creation Works
+The plugin can automatically create categories and tags when saving posts. This feature works differently depending on how you save your posts:
+
+**✅ WordPress Admin Interface (Fully Supported)**
+```php
+// In post editor → Custom SEO → Content tab
+// 1. Enter comma-separated category names in "Categories" field
+// 2. Enter comma-separated tag names in "Tags" field  
+// 3. Check "Auto-create missing categories/tags" option
+// 4. Save/Update the post - categories and tags are created automatically
+```
+
+**✅ REST API (Automatic Processing)**
+```bash
+# Create post with automatic category/tag creation
+curl -X POST "${WP_SITE}/wp-json/wp/v2/posts" \
+  -H "Content-Type: application/json" \
+  -u "${WP_USER}:${WP_PASSWORD}" \
+  -d '{
+    "title": "My New Post",
+    "content": "Post content here...",
+    "status": "publish",
+    "meta": {
+      "custom_seo_categories": "WordPress, SEO, Tutorial",
+      "custom_seo_tags": "wordpress tips, seo guide, tutorial",
+      "custom_seo_auto_create_terms": true,
+      "custom_seo_replace_categories": false,
+      "custom_seo_replace_tags": false
+    }
+  }'
+# ✅ Categories and tags are created automatically when meta is saved!
+```
+
+**🔧 Manual Processing (If Automatic Fails)**
+```bash
+# If automatic processing doesn't work, use the manual endpoint
+curl -X POST "${WP_SITE}/wp-json/custom-seo/v1/process-terms/123" \
+  -H "Content-Type: application/json" \
+  -u "${WP_USER}:${WP_PASSWORD}" \
+  -d '{
+    "categories": "WordPress, SEO, Tutorial",
+    "tags": "wordpress tips, seo guide, tutorial",
+    "auto_create": true,
+    "replace_categories": false,
+    "replace_tags": false
+  }'
+```
+
+**🐛 Troubleshooting Auto-Creation**
+```bash
+# 1. Verify the meta fields were saved
+curl -X GET "${WP_SITE}/wp-json/wp/v2/posts/123?_fields=id,meta" \
+  -u "${WP_USER}:${WP_PASSWORD}"
+
+# 2. Check if categories/tags were assigned
+curl -X GET "${WP_SITE}/wp-json/wp/v2/posts/123?_fields=id,categories,tags" \
+  -u "${WP_USER}:${WP_PASSWORD}"
+
+# 3. Enable debug logging (add to wp-config.php)
+define('WP_DEBUG', true);
+define('WP_DEBUG_LOG', true);
+# Check /wp-content/debug.log for processing messages
+
+# 4. Force processing with manual endpoint
+curl -X POST "${WP_SITE}/wp-json/custom-seo/v1/process-terms/123" \
+  -H "Content-Type: application/json" \
+  -u "${WP_USER}:${WP_PASSWORD}" \
+  -d '{
+    "categories": "WordPress, SEO, Tutorial",
+    "tags": "wordpress tips, seo guide, tutorial",
+    "auto_create": true,
+    "replace_categories": false,
+    "replace_tags": false
+  }'
+```
+
+#### Configuration Options
+
+| Field | Type | Description | Default |
+|-------|------|-------------|---------|
+| `custom_seo_categories` | string | Comma-separated category names | "" |
+| `custom_seo_tags` | string | Comma-separated tag names | "" |
+| `custom_seo_auto_create_terms` | boolean | Create missing categories/tags | `true` |
+| `custom_seo_replace_categories` | boolean | Replace existing categories | `false` |
+| `custom_seo_replace_tags` | boolean | Replace existing tags | `false` |
+
+#### ⚠️ Important Notes for REST API Usage
+
+**Why Categories/Tags Might Not Be Created:**
+1. **Missing `custom_seo_auto_create_terms`**: Must be set to `true`
+2. **Wrong field names**: Use `custom_seo_categories` not `categories`  
+3. **Permission issues**: User must have `edit_posts` capability
+4. **Invalid names**: Category/tag names with special characters may fail
+
+**✅ Recent Fixes Applied:**
+
+**v1.0.3 (Latest):**
+- 🔧 **CRITICAL FIX**: Replaced deprecated `wp_insert_category()` with modern `wp_insert_term()`
+- 🔧 **IMPROVED**: Updated category existence checks to use `get_term_by()` instead of `get_category_by_slug()`
+- ✅ **RESOLVED**: "Call to undefined function wp_insert_category" error
+- ✅ **COMPATIBILITY**: Now works with all WordPress versions (5.0+)
+
+**v1.0.2:**
+- Added `rest_insert_post` and `rest_after_insert_post` hooks for better REST API support
+- Auto-creation now works reliably when creating posts via REST API
+- Added debug logging for troubleshooting (enable WP_DEBUG to see logs)
+- Improved processing to avoid duplicate execution
+
+**Best Practice for REST API:**
+```bash
+# Always include ALL required fields in the meta object
+"meta": {
+  "custom_seo_categories": "WordPress, SEO, Tutorial",
+  "custom_seo_tags": "wordpress tips, seo guide, tutorial", 
+  "custom_seo_auto_create_terms": true,           # 👈 REQUIRED!
+  "custom_seo_replace_categories": false,
+  "custom_seo_replace_tags": false
+}
+```
+
+#### Auto-Creation Behavior
+
+**Add Mode (default)**: `replace_categories: false`
+- Keeps existing categories/tags
+- Adds new ones to existing list
+- Perfect for progressive content organization
+
+**Replace Mode**: `replace_categories: true`  
+- Removes all existing categories/tags
+- Assigns only the specified ones
+- Use when reorganizing content structure
+
+#### Error Handling
+```javascript
+// Success response from process-terms endpoint
+{
+  "success": true,
+  "post_id": 123,
+  "results": {
+    "categories": {
+      "success": ["WordPress", "SEO", "Tutorial"],
+      "errors": []
+    },
+    "tags": {
+      "success": ["wordpress tips", "seo guide", "tutorial"],
+      "errors": []
+    }
+  },
+  "message": "Processed 3 categories and 3 tags for post 123"
+}
+
+// Error response
+{
+  "success": false,
+  "post_id": 123,
+  "results": {
+    "categories": {
+      "success": ["WordPress", "SEO"],
+      "errors": ["Failed to create category 'Invalid@Name': Invalid characters"]
+    },
+    "tags": {
+      "success": ["wordpress tips"],
+      "errors": ["Tag name cannot be empty"]
+    }
+  },
+  "message": "Processed with errors for post 123"
+}
+```
+
 ### 🗺️ **Sitemap Usage**
 
 #### Main Sitemap Index
@@ -1025,7 +1196,15 @@ The plugin is translation-ready!
 
 ## 📝 Changelog
 
-### 🎉 Version 1.0.0 - *Current*
+### 🔥 Version 1.0.3 - *Current*
+
+- 🚨 **CRITICAL FIX:** Replaced deprecated `wp_insert_category()` with `wp_insert_term()` to resolve 500 errors
+- 🔧 **IMPROVED:** Updated category existence checking using `get_term_by()` instead of deprecated functions
+- 🐛 **FIXED:** WordPress compatibility issues that prevented category/tag auto-creation
+- 🔧 **IMPROVED:** Enhanced error handling and debug logging for category processing
+- ✅ **TESTED:** Full compatibility with modern WordPress versions
+
+### 🎉 Version 1.0.0
 - ✨ **NEW:** Complete plugin rewrite with modular architecture
 - ✨ **NEW:** Categories & Tags auto-creation and management system
 - ✨ **NEW:** Advanced breadcrumb system with JSON-LD schema
